@@ -5,10 +5,13 @@
  * 
  * Benefits of using Batch Apex:
  * 
- * 1. Large Data Volumes: Batch Apex is specifically tailored to handle large data volumes (LDV). It allows processing of records in batches, making it suitable for bulk processing, especially when dealing with millions of records.
- * 2. Avoid Governor Limits: By splitting the transaction into smaller batches, you can perform operations on a large number of records without hitting governor limits.
+ * 1. Large Data Volumes: Batch Apex is specifically tailored to handle large data volumes (LDV). 
+ *    It allows processing of records in batches, making it suitable for bulk processing, especially when dealing with millions of records.
+ * 2. Avoid Governor Limits: By splitting the transaction into smaller batches, you can perform operations on a large number of records
+ *    without hitting governor limits.
  * 3. Flexible Scheduling: Batch classes can be scheduled to run at specified intervals, providing flexibility in terms of when the processing occurs.
- * 4. Stateful Execution: Supports stateful execution, so you can maintain state across batch transactions by implementing the `Database.Stateful` interface.
+ * 4. Stateful Execution: Supports stateful execution, so you can maintain state across batch transactions by implementing the 
+ *    `Database.Stateful` interface.
  * 5. Built-in Retry Mechanism: If a batch fails, Salesforce provides built-in mechanisms to retry the batch.
  * 6. Asynchronous Processing: Operations are executed asynchronously, ensuring that the user is not blocked while the batch is processing.
  * 
@@ -20,7 +23,11 @@ public with sharing class NextStepBatch implements Database.Batchable<sObject>{
 
     public Database.QueryLocator start(Database.BatchableContext BC){
         // Query for all accounts and return the query locator.
-        return null; // Update null with the query locator
+
+        return Database.getQueryLocator([
+            SELECT Id, Next_Step__c
+            FROM Account
+            WHERE Id IN (SELECT AccountID FROM Opportunity) LIMIT 200]) ; // Update null with the query locator
     }
     
     public void execute(Database.BatchableContext BC, List<Account> scope){
@@ -29,18 +36,36 @@ public with sharing class NextStepBatch implements Database.Batchable<sObject>{
         // Update the Next Step field on each record in the batch scope.
 
         // Loop through the scope account records
-
-            // Set the Next Step field to 'Batching the next meetings together.'
-
+        for(Account acc : scope){
+        // Set the Next Step field to 'Batching the next meetings together.
+            acc.Next_Step__c = BATCH_NEXT_STEP;
+            System.debug('The Account Next Step is :' + acc.Next_Step__c);
+        }
         // Update the account records in this batch scope
-        
+
+        update scope;
+
         // Query for all opportunities related to the accounts in this batch scope
 
+        List<Opportunity> allOppList = [
+            SELECT Id, NextStep
+            FROM Opportunity 
+            WHERE AccountId IN :scope
+        ];
+        System.debug('The value of the scope :' + scope);
         // Loop through the opportunity records
 
-            // Set the Next Step field to 'Batching the next meetings together.'
+        for( Opportunity opp : allOppList){
+
+        // Set the Next Step field to 'Batching the next meetings together.'
+
+            opp.NextStep = BATCH_NEXT_STEP;
+            System.debug('The Opportunity NextStep is :' + opp.NextStep);
+        }
 
         // Update the opportunity records
+        
+        update allOppList;
 
     }
     
@@ -48,9 +73,18 @@ public with sharing class NextStepBatch implements Database.Batchable<sObject>{
         final List<User> USERS = [SELECT Id, Name, Email FROM User WHERE IsActive = true AND (NOT Email LIKE 'autoproc%')]; // DO NOT CHANGE
 
         // Get the email addresses of all active users
-
-            // Pass the set of active user emails to the sendEmailToActiveUsers method
+        Set<String> emails = new Set<String>();
+        for( User user : USERS){
+            emails.add(user.Email);
+        }
+        // Pass the set of active user emails to the sendEmailToActiveUsers method
+        sendEmailToActiveUsers(emails);
     }
+
+    // Instantiate the Batch Apex Class
+    //  NextStepBatch nextStepBatch = new NextStepBatch();
+    // //  Execute the Batch Apex Class
+    //  ID nextStepBatchId = Database.executeBatch(nextStepBatch, 200);
 
     // Helper method to send an email to all emails in the set
     private void sendEmailToActiveUsers(Set<String> emails){
