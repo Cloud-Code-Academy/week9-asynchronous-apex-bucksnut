@@ -17,15 +17,15 @@
  * 
  * Note: To make full use of this class, ensure that the NextStepBatch class is implemented and operational.
  */
-public with sharing class NextStepSchedule {
+public with sharing class NextStepSchedule implements Schedulable {
 
     /*
      * Update/Uncomment the template code to create a method
      * Method to execute the schedule job job
      * Code to execute the batch job should not need to change other than uncommenting the code
      */
-    //[public | private ] [static] data_type execute (input parameters) {
-        //NextStepBatch batch = new NextStepBatch(); 
-        //Database.executeBatch(batch);
-    //}
+    public void execute (SchedulableContext sc) {
+        NextStepBatch batch = new NextStepBatch(); 
+        Database.executeBatch(batch);
+    }
 }

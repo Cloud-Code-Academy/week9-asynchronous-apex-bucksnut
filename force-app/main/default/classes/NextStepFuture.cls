@@ -25,15 +25,44 @@ public with sharing class NextStepFuture {
      * Opportunity Next Step field is a standard field
      * Update the corresponding test class AsynchronousTest and test method nextStepFuture_testUpdateAllNextStep to cover test this method
      */
-    //[public | private ] [static] data_type method_name (input parameters) {
-    //  The body of the method
-    //}
+    @future
+    public static void updateAcctAndOpportunityNextStep () {
+        List<Account> allAccounts = [
+                                    SELECT Id 
+                                    FROM Account
+                                    WHERE Id IN (SELECT AccountID FROM Opportunity)];
+        Set<Id> accountIds = new Set<Id>();
+        Map<Id,List<Opportunity>> accountToOpps = new Map<Id,List<Opportunity>>();
+
+        // Cycle through all Account records to update Next Step
+        for( Account acc : allAccounts){
+            accountIds.add(acc.Id); 
+            acc.Next_Step__c = 'Meeting in the future';        
+        }
+        // update Accounts
+        update allAccounts;
+
+        // query related Opportunities 
+        List<Opportunity> allRelatedOpportunities = [
+            SELECT ID, NextStep, AccountID
+            FROM Opportunity
+            WHERE AccountID IN :accountIds];
+        for( Opportunity opp : allRelatedOpportunities){
+                opp.NextStep = 'Meeting in the future';    
+        // update related opportunities
+         update allRelatedOpportunities;
+        }
+    }
 
     //Mix DML Error happens when you try to perform DML operations on setup and non-setup objects in a single transaction.
-    public static void createDealAndUpdateRole() {
+    
+    public static void createDeal() {
         Opportunity bigDeal = new Opportunity();
-        insertBigDeal(bigDeal);
-
+        insertBigDeal(bigDeal); 
+    }
+    // break Update off to prevent Mixed DML errors 
+    @future
+    public static void updateRole(){
         UserRole[] roles = [SELECT Id, Name FROM UserRole WHERE Id = :UserInfo.getUserRoleId() OR Name = 'CRO' LIMIT 1];
         updateUserRoleName(roles);
     }

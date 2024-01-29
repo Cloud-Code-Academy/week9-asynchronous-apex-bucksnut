@@ -12,7 +12,7 @@
  * 
  * 3. nextStepQueueable_testEnqueueJob: 
  *    - Tests the enqueue operation and execution of the NextStepQueueable class.
- *    - Validates if the NextStep fields in Account and Opportunity are set to null after execution.
+ *    - Validates if the NextStep fields in Account and OpportunitNy are set to null after execution.
  * 
  * 4. nextStepBatch_testUpdateAllNextStep: 
  *    - Tests the batch class operation for updating NextStep fields in Account and Opportunity.
@@ -43,7 +43,9 @@ public with sharing class AsynchronousTest {
 
         // Call the method to test between the startTest and stopTest methods
         Test.startTest();
-        //YOUR CODE HERE
+        NextStepFuture.updateAcctAndOpportunityNextStep();
+        // NextStepFuture.createDeal();
+        // NextStepFuture.updateRole();
         Test.stopTest();
 
         // Query the updated accounts and opportunities
@@ -64,7 +66,8 @@ public with sharing class AsynchronousTest {
     @IsTest
     static void nextStepFuture_createDealAndUpdateRole() {        
         Test.startTest();
-        NextStepFuture.createDealAndUpdateRole();
+        NextStepFuture.createDeal();
+        NextStepFuture.updateRole();
         Test.stopTest();
 
         // Due to the Mixed DML error, we need to test the insertBigDeal method
@@ -148,7 +151,7 @@ public with sharing class AsynchronousTest {
         }
     }
 
-    /*  //UNCOMMENT TEST METHODS BELOW ONCE THE NextStepSchedule class is implemented
+     //UNCOMMENT TEST METHODS BELOW ONCE THE NextStepSchedule class is implemented
         //No Changes should be required to the test methods/code below other than uncommenting them
         //Manually setup the scheduled job in Salesforce to run the NextStepSchedule class
     @IsTest
@@ -189,5 +192,5 @@ public with sharing class AsynchronousTest {
             System.assertEquals('Batching the next meetings together.', opp.NextStep, 'Opportunity NextStep field was not updated correctly.');
         }
     }
-    */
+   
 }
